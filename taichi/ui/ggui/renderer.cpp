@@ -130,14 +130,20 @@ void Renderer::init_scene_ubo() {
 }
 
 void Renderer::update_scene_data(SceneBase *scene) {
-  // Update SSBO
+  // Update SSBO (point lights followed by directional lights)
   {
-    size_t new_ssbo_size = scene->point_lights_.size() * sizeof(PointLight);
+    size_t point_size =
+        scene->point_lights_.size() * sizeof(PointLight);
+    size_t dir_size =
+        scene->directional_lights_.size() * sizeof(DirectionalLight);
+    size_t new_ssbo_size = point_size + dir_size;
     resize_lights_ssbo(new_ssbo_size);
 
     void *mapped{nullptr};
     RHI_VERIFY(app_context_.device().map(lights_ssbo_->get_ptr(), &mapped));
-    memcpy(mapped, scene->point_lights_.data(), new_ssbo_size);
+    memcpy(mapped, scene->point_lights_.data(), point_size);
+    memcpy(static_cast<char *>(mapped) + point_size,
+           scene->directional_lights_.data(), dir_size);
     app_context_.device().unmap(*lights_ssbo_);
   }
 
@@ -176,6 +182,7 @@ void Renderer::scene_v2(SceneBase *scene) {
   }
 
   scene->point_lights_.clear();
+  scene->directional_lights_.clear();
 }
 
 void Renderer::scene(SceneBase *scene) {
@@ -215,6 +222,7 @@ void Renderer::scene(SceneBase *scene) {
   scene->particles_infos_.clear();
   scene->scene_lines_infos_.clear();
   scene->point_lights_.clear();
+  scene->directional_lights_.clear();
 
   for (auto renderable_ : render_queue_) {
     if (renderable_->is_3d_renderable) {

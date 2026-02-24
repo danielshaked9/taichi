@@ -38,6 +38,7 @@ struct SceneUBO {
   mat4 projection;
   vec3 ambient_light;
   int point_light_count;
+  int directional_light_count;
 };
 
 layout(binding = 4) uniform UBORenderable {
@@ -94,11 +95,11 @@ void main() {
     color0 = vec4(vb_in[vert0 * ubo_renderable.vertex_stride + ubo_renderable.per_vertex_color_offset],
                   vb_in[vert0 * ubo_renderable.vertex_stride + ubo_renderable.per_vertex_color_offset + 1],
                   vb_in[vert0 * ubo_renderable.vertex_stride + ubo_renderable.per_vertex_color_offset + 2],
-                  1.0);
+                  vb_in[vert0 * ubo_renderable.vertex_stride + ubo_renderable.per_vertex_color_offset + 3]);
     color1 = vec4(vb_in[vert1 * ubo_renderable.vertex_stride + ubo_renderable.per_vertex_color_offset],
                   vb_in[vert1 * ubo_renderable.vertex_stride + ubo_renderable.per_vertex_color_offset + 1],
                   vb_in[vert1 * ubo_renderable.vertex_stride + ubo_renderable.per_vertex_color_offset + 2],
-                  1.0);
+                  vb_in[vert1 * ubo_renderable.vertex_stride + ubo_renderable.per_vertex_color_offset + 3]);
   }
 
   vec2 aspect_adjust = vec2(ubo_scene.aspect_ratio, 1.0);

@@ -6,6 +6,7 @@ struct SceneUBO {
   mat4 projection;
   vec3 ambient_light;
   int point_light_count;
+  int directional_light_count;
 };
 
 layout(binding = 0) uniform UBORenderable {
@@ -56,13 +57,24 @@ vec3 to_camera_space(vec3 pos) {
 vec3 lambertian(vec3 frag_pos, vec3 frag_normal) {
   vec3 ambient = ubo_scene.scene.ambient_light * selected_color.rgb;
   vec3 result = ambient;
+  vec3 normal = normalize(frag_normal);
 
   for (int i = 0; i < ubo_scene.scene.point_light_count; ++i) {
     vec3 light_color = ssbo.point_lights[i].color;
 
     vec3 light_dir =
         normalize(to_camera_space(ssbo.point_lights[i].pos) - frag_pos);
-    vec3 normal = normalize(frag_normal);
+    vec3 diffuse =
+        max(dot(light_dir, normal), 0.0) * selected_color.rgb * light_color;
+
+    result += diffuse;
+  }
+
+  int dir_offset = ubo_scene.scene.point_light_count;
+  for (int i = 0; i < ubo_scene.scene.directional_light_count; ++i) {
+    vec3 light_color = ssbo.point_lights[dir_offset + i].color;
+    vec3 light_dir_world = normalize(-ssbo.point_lights[dir_offset + i].pos);
+    vec3 light_dir = normalize(mat3(ubo_scene.scene.view) * light_dir_world);
     vec3 diffuse =
         max(dot(light_dir, normal), 0.0) * selected_color.rgb * light_color;
 

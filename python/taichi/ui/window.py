@@ -138,6 +138,22 @@ class Window:
         """Get current cursor position, in the range `[0, 1] x [0, 1]`."""
         return self.window.get_cursor_pos()
 
+    def get_scroll_delta(self):
+        """Get accumulated mouse scroll wheel delta since last call.
+
+        Returns:
+            tuple[float, float]: (x, y) scroll delta values.
+        """
+        return self.window.get_scroll_delta()
+
+    def set_title(self, title):
+        """Update the window title at runtime.
+
+        Args:
+            title (str): the new window title.
+        """
+        self.window.set_title(title)
+
     def show(self):
         """Display this window."""
         return self.window.show()

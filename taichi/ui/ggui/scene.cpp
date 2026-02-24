@@ -28,6 +28,10 @@ void Scene::point_light(glm::vec3 pos, glm::vec3 color) {
 void Scene::ambient_light(glm::vec3 color) {
   ambient_light_color_ = color;
 }
+void Scene::directional_light(glm::vec3 direction, glm::vec3 color) {
+  directional_lights_.push_back(
+      {glm::vec4(glm::normalize(direction), 0.0), glm::vec4(color, 1.0)});
+}
 
 }  // namespace vulkan
 

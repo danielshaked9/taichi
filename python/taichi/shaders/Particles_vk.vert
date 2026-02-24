@@ -12,6 +12,7 @@ struct SceneUBO {
   mat4 projection;
   vec3 ambient_light;
   int point_light_count;
+  int directional_light_count;
 };
 
 layout(binding = 0) uniform UBORenderable {

@@ -1,5 +1,6 @@
 
 #include <vector>
+#include <cfloat>
 #include "pybind11/pybind11.h"
 #include <pybind11/numpy.h>
 #include "pybind11/stl.h"
@@ -41,6 +42,14 @@ glm::vec3 tuple_to_vec3(pybind11::tuple t) {
 
 pybind11::tuple vec3_to_tuple(glm::vec3 v) {
   return pybind11::make_tuple(v.x, v.y, v.z);
+}
+
+glm::vec4 tuple_to_vec4(pybind11::tuple t) {
+  return glm::vec4(t[0].cast<float>(), t[1].cast<float>(),
+                   t[2].cast<float>(), t[3].cast<float>());
+}
+pybind11::tuple vec4_to_tuple(glm::vec4 v) {
+  return pybind11::make_tuple(v.x, v.y, v.z, v.w);
 }
 
 // Here we convert the 2d-array to numpy array using pybind. Refs:
@@ -91,6 +100,139 @@ struct PyGui {
   }
   bool button(std::string name) {
     return gui->button(name);
+  }
+  std::string input_text(std::string name, std::string old_value) {
+    return gui->input_text(name, old_value);
+  }
+  void graph(std::string title,
+             std::vector<float> values,
+             py::object scale_min,
+             py::object scale_max,
+             float graph_size_x,
+             float graph_size_y,
+             std::string overlay_text) {
+    float smin = scale_min.is_none() ? FLT_MAX : scale_min.cast<float>();
+    float smax = scale_max.is_none() ? FLT_MAX : scale_max.cast<float>();
+    gui->graph(title, values, smin, smax, graph_size_x, graph_size_y,
+               overlay_text);
+  }
+  void graph_histogram(std::string title,
+                       std::vector<float> values,
+                       py::object scale_min,
+                       py::object scale_max,
+                       float graph_size_x,
+                       float graph_size_y,
+                       std::string overlay_text) {
+    float smin = scale_min.is_none() ? FLT_MAX : scale_min.cast<float>();
+    float smax = scale_max.is_none() ? FLT_MAX : scale_max.cast<float>();
+    gui->graph_histogram(title, values, smin, smax, graph_size_x, graph_size_y,
+                         overlay_text);
+  }
+  int combo(std::string name, int old_value, std::vector<std::string> items) {
+    return gui->combo(name, old_value, items);
+  }
+  bool radio_button(std::string name, bool active) {
+    return gui->radio_button(name, active);
+  }
+  int listbox(std::string name,
+              int old_value,
+              std::vector<std::string> items,
+              int height_in_items) {
+    return gui->listbox(name, old_value, items, height_in_items);
+  }
+  int input_int(std::string name, int old_value, int step, int step_fast) {
+    return gui->input_int(name, old_value, step, step_fast);
+  }
+  float input_float(std::string name,
+                    float old_value,
+                    float step,
+                    float step_fast) {
+    return gui->input_float(name, old_value, step, step_fast);
+  }
+  float drag_float(std::string name,
+                   float old_value,
+                   float speed,
+                   float v_min,
+                   float v_max) {
+    return gui->drag_float(name, old_value, speed, v_min, v_max);
+  }
+  int drag_int(std::string name,
+               int old_value,
+               float speed,
+               int v_min,
+               int v_max) {
+    return gui->drag_int(name, old_value, speed, v_min, v_max);
+  }
+  void progress_bar(float fraction,
+                    float size_x,
+                    float size_y,
+                    std::string overlay) {
+    gui->progress_bar(fraction, size_x, size_y, overlay);
+  }
+  void separator() {
+    gui->separator();
+  }
+  void same_line(float offset, float spacing) {
+    gui->same_line(offset, spacing);
+  }
+  void text_wrapped(std::string text) {
+    gui->text_wrapped(text);
+  }
+  bool collapsing_header(std::string name) {
+    return gui->collapsing_header(name);
+  }
+  bool tree_node(std::string name) {
+    return gui->tree_node(name);
+  }
+  void tree_pop() {
+    gui->tree_pop();
+  }
+  void tooltip(std::string text) {
+    gui->tooltip(text);
+  }
+  py::tuple color_edit_4(std::string name, py::tuple old_value) {
+    glm::vec4 old_color = tuple_to_vec4(old_value);
+    glm::vec4 new_color = gui->color_edit_4(name, old_color);
+    return vec4_to_tuple(new_color);
+  }
+  std::string input_text_multiline(std::string name,
+                                   std::string old_value,
+                                   float width,
+                                   float height) {
+    return gui->input_text_multiline(name, old_value, width, height);
+  }
+  bool begin_tab_bar(std::string name) {
+    return gui->begin_tab_bar(name);
+  }
+  void end_tab_bar() {
+    gui->end_tab_bar();
+  }
+  bool begin_tab_item(std::string name) {
+    return gui->begin_tab_item(name);
+  }
+  void end_tab_item() {
+    gui->end_tab_item();
+  }
+  bool begin_table(std::string name,
+                   int column,
+                   float outer_size_x,
+                   float outer_size_y) {
+    return gui->begin_table(name, column, outer_size_x, outer_size_y);
+  }
+  void end_table() {
+    gui->end_table();
+  }
+  void table_next_row() {
+    gui->table_next_row();
+  }
+  bool table_next_column() {
+    return gui->table_next_column();
+  }
+  void table_setup_column(std::string label) {
+    gui->table_setup_column(label);
+  }
+  void table_headers_row() {
+    gui->table_headers_row();
   }
 };
 
@@ -284,6 +426,12 @@ struct PyScene {
     scene->ambient_light(color);
   }
 
+  void directional_light(py::tuple dir_, py::tuple color_) {
+    glm::vec3 dir = tuple_to_vec3(dir_);
+    glm::vec3 color = tuple_to_vec3(color_);
+    scene->directional_light(dir, color);
+  }
+
   ~PyScene() {
     delete scene;
   }
@@ -429,6 +577,12 @@ struct PySceneV2 {
   void ambient_light(py::tuple color_) {
     glm::vec3 color = tuple_to_vec3(color_);
     scene->ambient_light(color);
+  }
+
+  void directional_light(py::tuple dir_, py::tuple color_) {
+    glm::vec3 dir = tuple_to_vec3(dir_);
+    glm::vec3 color = tuple_to_vec3(color_);
+    scene->directional_light(dir, color);
   }
 };
 
@@ -598,6 +752,10 @@ struct PyWindow {
     window->show();
   }
 
+  void set_title(std::string title) {
+    window->set_title(title);
+  }
+
   bool is_pressed(std::string button) {
     return window->is_pressed(button);
   }
@@ -640,6 +798,11 @@ struct PyWindow {
     return gui;
   }
 
+  py::tuple get_scroll_delta() {
+    auto delta = window->get_scroll_delta();
+    return py::make_tuple(delta.first, delta.second);
+  }
+
   // this is so that the GUI class does not need to use any pybind related stuff
   py::tuple py_get_cursor_pos() {
     auto pos = window->get_cursor_pos();
@@ -664,6 +827,7 @@ void export_ggui(py::module &m) {
       .def("get_canvas", &PyWindow::get_canvas)
       .def("get_scene", &PyWindow::get_scene)
       .def("show", &PyWindow::show)
+      .def("set_title", &PyWindow::set_title)
       .def("get_window_shape", &PyWindow::get_window_shape)
       .def("write_image", &PyWindow::write_image)
       .def("copy_depth_buffer_to_ndarray",
@@ -671,6 +835,7 @@ void export_ggui(py::module &m) {
       .def("get_image_buffer_as_numpy", &PyWindow::get_image_buffer)
       .def("is_pressed", &PyWindow::is_pressed)
       .def("get_cursor_pos", &PyWindow::py_get_cursor_pos)
+      .def("get_scroll_delta", &PyWindow::get_scroll_delta)
       .def("is_running", &PyWindow::is_running)
       .def("set_is_running", &PyWindow::set_is_running)
       .def("get_event", &PyWindow::get_event)
@@ -699,7 +864,37 @@ void export_ggui(py::module &m) {
       .def("slider_int", &PyGui::slider_int)
       .def("slider_float", &PyGui::slider_float)
       .def("color_edit_3", &PyGui::color_edit_3)
-      .def("button", &PyGui::button);
+      .def("button", &PyGui::button)
+      .def("input_text", &PyGui::input_text)
+      .def("graph", &PyGui::graph)
+      .def("graph_histogram", &PyGui::graph_histogram)
+      .def("combo", &PyGui::combo)
+      .def("radio_button", &PyGui::radio_button)
+      .def("listbox", &PyGui::listbox)
+      .def("input_int", &PyGui::input_int)
+      .def("input_float", &PyGui::input_float)
+      .def("drag_float", &PyGui::drag_float)
+      .def("drag_int", &PyGui::drag_int)
+      .def("progress_bar", &PyGui::progress_bar)
+      .def("separator", &PyGui::separator)
+      .def("same_line", &PyGui::same_line)
+      .def("text_wrapped", &PyGui::text_wrapped)
+      .def("collapsing_header", &PyGui::collapsing_header)
+      .def("tree_node", &PyGui::tree_node)
+      .def("tree_pop", &PyGui::tree_pop)
+      .def("tooltip", &PyGui::tooltip)
+      .def("color_edit_4", &PyGui::color_edit_4)
+      .def("input_text_multiline", &PyGui::input_text_multiline)
+      .def("begin_tab_bar", &PyGui::begin_tab_bar)
+      .def("end_tab_bar", &PyGui::end_tab_bar)
+      .def("begin_tab_item", &PyGui::begin_tab_item)
+      .def("end_tab_item", &PyGui::end_tab_item)
+      .def("begin_table", &PyGui::begin_table)
+      .def("end_table", &PyGui::end_table)
+      .def("table_next_row", &PyGui::table_next_row)
+      .def("table_next_column", &PyGui::table_next_column)
+      .def("table_setup_column", &PyGui::table_setup_column)
+      .def("table_headers_row", &PyGui::table_headers_row);
 
   py::class_<PyScene>(m, "PyScene")
       .def(py::init<>())
@@ -709,7 +904,8 @@ void export_ggui(py::module &m) {
       .def("particles", &PyScene::particles)
       .def("mesh_instance", &PyScene::mesh_instance)
       .def("point_light", &PyScene::point_light)
-      .def("ambient_light", &PyScene::ambient_light);
+      .def("ambient_light", &PyScene::ambient_light)
+      .def("directional_light", &PyScene::directional_light);
 
   py::class_<PySceneV2>(m, "PySceneV2")
       .def("set_camera", &PySceneV2::set_camera)
@@ -718,7 +914,8 @@ void export_ggui(py::module &m) {
       .def("particles", &PySceneV2::particles)
       .def("mesh_instance", &PySceneV2::mesh_instance)
       .def("point_light", &PySceneV2::point_light)
-      .def("ambient_light", &PySceneV2::ambient_light);
+      .def("ambient_light", &PySceneV2::ambient_light)
+      .def("directional_light", &PySceneV2::directional_light);
 
   py::class_<PyCamera>(m, "PyCamera")
       .def(py::init<>())

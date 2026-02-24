@@ -197,7 +197,7 @@ float Gui::slider_float(const std::string &name,
   if (!initialized()) {
     return old_value;
   }
-  ImGui::SliderFloat(name.c_str(), &old_value, minimum, maximum);
+  ImGui::SliderFloat(name.c_str(), &old_value, minimum, maximum, "%.7g");
   return old_value;
 }
 glm::vec3 Gui::color_edit_3(const std::string &name, glm::vec3 old_value) {
@@ -212,6 +212,264 @@ bool Gui::button(const std::string &text) {
     return false;
   }
   return ImGui::Button(text.c_str());
+}
+std::string Gui::input_text(const std::string &name,
+                            const std::string &old_value) {
+  if (!initialized()) {
+    return old_value;
+  }
+  char buf[256];
+  strncpy(buf, old_value.c_str(), sizeof(buf) - 1);
+  buf[sizeof(buf) - 1] = '\0';
+  ImGui::InputText(name.c_str(), buf, sizeof(buf));
+  return std::string(buf);
+}
+void Gui::graph(const std::string &title,
+                const std::vector<float> &values,
+                float scale_min,
+                float scale_max,
+                float graph_size_x,
+                float graph_size_y,
+                const std::string &overlay_text) {
+  if (!initialized()) {
+    return;
+  }
+  const char *overlay = overlay_text.empty() ? nullptr : overlay_text.c_str();
+  ImGui::PlotLines(title.c_str(), values.data(), (int)values.size(), 0, overlay,
+                   scale_min, scale_max, ImVec2(graph_size_x, graph_size_y));
+}
+void Gui::graph_histogram(const std::string &title,
+                          const std::vector<float> &values,
+                          float scale_min,
+                          float scale_max,
+                          float graph_size_x,
+                          float graph_size_y,
+                          const std::string &overlay_text) {
+  if (!initialized()) {
+    return;
+  }
+  const char *overlay = overlay_text.empty() ? nullptr : overlay_text.c_str();
+  ImGui::PlotHistogram(title.c_str(), values.data(), (int)values.size(), 0,
+                       overlay, scale_min, scale_max,
+                       ImVec2(graph_size_x, graph_size_y));
+}
+
+int Gui::combo(const std::string &name,
+               int old_value,
+               const std::vector<std::string> &items) {
+  if (!initialized()) {
+    return old_value;
+  }
+  std::vector<const char *> c_items;
+  c_items.reserve(items.size());
+  for (const auto &s : items) {
+    c_items.push_back(s.c_str());
+  }
+  ImGui::Combo(name.c_str(), &old_value, c_items.data(), (int)c_items.size());
+  return old_value;
+}
+bool Gui::radio_button(const std::string &name, bool active) {
+  if (!initialized()) {
+    return false;
+  }
+  return ImGui::RadioButton(name.c_str(), active);
+}
+int Gui::listbox(const std::string &name,
+                 int old_value,
+                 const std::vector<std::string> &items,
+                 int height_in_items) {
+  if (!initialized()) {
+    return old_value;
+  }
+  std::vector<const char *> c_items;
+  c_items.reserve(items.size());
+  for (const auto &s : items) {
+    c_items.push_back(s.c_str());
+  }
+  ImGui::ListBox(name.c_str(), &old_value, c_items.data(), (int)c_items.size(),
+                 height_in_items);
+  return old_value;
+}
+int Gui::input_int(const std::string &name,
+                   int old_value,
+                   int step,
+                   int step_fast) {
+  if (!initialized()) {
+    return old_value;
+  }
+  ImGui::InputInt(name.c_str(), &old_value, step, step_fast);
+  return old_value;
+}
+float Gui::input_float(const std::string &name,
+                       float old_value,
+                       float step,
+                       float step_fast) {
+  if (!initialized()) {
+    return old_value;
+  }
+  ImGui::InputFloat(name.c_str(), &old_value, step, step_fast);
+  return old_value;
+}
+float Gui::drag_float(const std::string &name,
+                      float old_value,
+                      float speed,
+                      float v_min,
+                      float v_max) {
+  if (!initialized()) {
+    return old_value;
+  }
+  ImGui::DragFloat(name.c_str(), &old_value, speed, v_min, v_max);
+  return old_value;
+}
+int Gui::drag_int(const std::string &name,
+                  int old_value,
+                  float speed,
+                  int v_min,
+                  int v_max) {
+  if (!initialized()) {
+    return old_value;
+  }
+  ImGui::DragInt(name.c_str(), &old_value, speed, v_min, v_max);
+  return old_value;
+}
+void Gui::progress_bar(float fraction,
+                       float size_x,
+                       float size_y,
+                       const std::string &overlay) {
+  if (!initialized()) {
+    return;
+  }
+  const char *ovl = overlay.empty() ? nullptr : overlay.c_str();
+  ImGui::ProgressBar(fraction, ImVec2(size_x, size_y), ovl);
+}
+void Gui::separator() {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::Separator();
+}
+void Gui::same_line(float offset, float spacing) {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::SameLine(offset, spacing);
+}
+void Gui::text_wrapped(const std::string &text) {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::TextWrapped("%s", text.c_str());
+}
+bool Gui::collapsing_header(const std::string &name) {
+  if (!initialized()) {
+    return false;
+  }
+  return ImGui::CollapsingHeader(name.c_str());
+}
+bool Gui::tree_node(const std::string &name) {
+  if (!initialized()) {
+    return false;
+  }
+  return ImGui::TreeNode(name.c_str());
+}
+void Gui::tree_pop() {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::TreePop();
+}
+void Gui::tooltip(const std::string &text) {
+  if (!initialized()) {
+    return;
+  }
+  if (ImGui::IsItemHovered()) {
+    ImGui::SetTooltip("%s", text.c_str());
+  }
+}
+glm::vec4 Gui::color_edit_4(const std::string &name, glm::vec4 old_value) {
+  if (!initialized()) {
+    return old_value;
+  }
+  ImGui::ColorEdit4(name.c_str(), (float *)&old_value);
+  return old_value;
+}
+std::string Gui::input_text_multiline(const std::string &name,
+                                      const std::string &old_value,
+                                      float width,
+                                      float height) {
+  if (!initialized()) {
+    return old_value;
+  }
+  char buf[4096];
+  strncpy(buf, old_value.c_str(), sizeof(buf) - 1);
+  buf[sizeof(buf) - 1] = '\0';
+  ImGui::InputTextMultiline(name.c_str(), buf, sizeof(buf),
+                            ImVec2(width, height));
+  return std::string(buf);
+}
+bool Gui::begin_tab_bar(const std::string &name) {
+  if (!initialized()) {
+    return false;
+  }
+  return ImGui::BeginTabBar(name.c_str());
+}
+void Gui::end_tab_bar() {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::EndTabBar();
+}
+bool Gui::begin_tab_item(const std::string &name) {
+  if (!initialized()) {
+    return false;
+  }
+  return ImGui::BeginTabItem(name.c_str());
+}
+void Gui::end_tab_item() {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::EndTabItem();
+}
+bool Gui::begin_table(const std::string &name,
+                      int column,
+                      float outer_size_x,
+                      float outer_size_y) {
+  if (!initialized()) {
+    return false;
+  }
+  return ImGui::BeginTable(name.c_str(), column, 0,
+                           ImVec2(outer_size_x, outer_size_y));
+}
+void Gui::end_table() {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::EndTable();
+}
+void Gui::table_next_row() {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::TableNextRow();
+}
+bool Gui::table_next_column() {
+  if (!initialized()) {
+    return false;
+  }
+  return ImGui::TableNextColumn();
+}
+void Gui::table_setup_column(const std::string &label) {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::TableSetupColumn(label.c_str());
+}
+void Gui::table_headers_row() {
+  if (!initialized()) {
+    return;
+  }
+  ImGui::TableHeadersRow();
 }
 
 void Gui::draw(taichi::lang::CommandList *cmd_list) {

@@ -445,6 +445,20 @@ class SceneV2:
         """
         self.scene.ambient_light(tuple(color))
 
+    def directional_light(self, direction, color):
+        """Set a directional light in this scene.
+
+        A directional light represents an infinitely distant light source
+        (like the sun) that illuminates all objects from a given direction.
+
+        Args:
+            direction (list, tuple, :class:`~taichi.types.vector(3, float)`):
+                3D vector for the light direction.
+            color (list, tuple, :class:`~taichi.types.vector(3, float)`):
+                (r, g, b) triple for the color of the light, in the range [0, 1].
+        """
+        self.scene.directional_light(tuple(direction), tuple(color))
+
 
 class Scene:
     """The old 3D scene class, which can contain meshes, lines and particles,
@@ -800,3 +814,17 @@ class Scene:
             >>> scene.ambient_light([0.2, 0.2, 0.2])
         """
         self.scene.ambient_light(tuple(color))
+
+    def directional_light(self, direction, color):
+        """Set a directional light in this scene.
+
+        A directional light represents an infinitely distant light source
+        (like the sun) that illuminates all objects from a given direction.
+
+        Args:
+            direction (list, tuple, :class:`~taichi.types.vector(3, float)`):
+                3D vector for the light direction.
+            color (list, tuple, :class:`~taichi.types.vector(3, float)`):
+                (r, g, b) triple for the color of the light, in the range [0, 1].
+        """
+        self.scene.directional_light(tuple(direction), tuple(color))

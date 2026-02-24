@@ -37,7 +37,7 @@ target_include_directories(taichi_ui_ggui
     ${PROJECT_SOURCE_DIR}/external/VulkanMemoryAllocator/include
     ${PROJECT_SOURCE_DIR}/external/imgui
     ${PROJECT_SOURCE_DIR}/external/imgui/backends
-    ${PROJECT_SOURCE_DIR}/external/Vulkan-Headers/include
+    /usr/include
     ${LLVM_INCLUDE_DIRS}
   PUBLIC
     ${PROJECT_SOURCE_DIR}/external/glfw/include

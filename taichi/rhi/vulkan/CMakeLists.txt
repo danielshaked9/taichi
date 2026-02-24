@@ -30,7 +30,7 @@ target_include_directories(${VULKAN_RHI}
 target_include_directories(${VULKAN_RHI} SYSTEM
   PUBLIC
     ${PROJECT_SOURCE_DIR}/external/volk
-    ${PROJECT_SOURCE_DIR}/external/Vulkan-Headers/include
+    /usr/include
     ${PROJECT_SOURCE_DIR}/external/VulkanMemoryAllocator/include
   PRIVATE
     ${PROJECT_SOURCE_DIR}/external/SPIRV-Reflect

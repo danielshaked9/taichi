@@ -87,6 +87,19 @@ class InputHandler {
     user_mouse_button_callbacks_.push_back(f);
   }
 
+  void scroll_callback(float xoffset, float yoffset) {
+    scroll_x_delta_ += xoffset;
+    scroll_y_delta_ += yoffset;
+  }
+
+  std::pair<float, float> get_scroll_delta() {
+    float x = scroll_x_delta_;
+    float y = scroll_y_delta_;
+    scroll_x_delta_ = 0;
+    scroll_y_delta_ = 0;
+    return std::make_pair(x, y);
+  }
+
   InputHandler() : keys_(1024, false) {
   }
 
@@ -98,6 +111,9 @@ class InputHandler {
   std::vector<bool> keys_;
   float last_x_ = 0;
   float last_y_ = 0;
+
+  float scroll_x_delta_ = 0;
+  float scroll_y_delta_ = 0;
 
   std::vector<std::function<void(int, int)>> user_key_callbacks_;
   std::vector<std::function<void(double, double)>> user_mouse_pos_callbacks_;

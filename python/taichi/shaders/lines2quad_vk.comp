@@ -73,11 +73,11 @@ void main() {
     color0 = vec4(vb_in[vert0 * ubo.vertex_stride + ubo.per_vertex_color_offset],
                   vb_in[vert0 * ubo.vertex_stride + ubo.per_vertex_color_offset + 1],
                   vb_in[vert0 * ubo.vertex_stride + ubo.per_vertex_color_offset + 2],
-                  1.0);
+                  vb_in[vert0 * ubo.vertex_stride + ubo.per_vertex_color_offset + 3]);
     color1 = vec4(vb_in[vert1 * ubo.vertex_stride + ubo.per_vertex_color_offset],
                   vb_in[vert1 * ubo.vertex_stride + ubo.per_vertex_color_offset + 1],
                   vb_in[vert1 * ubo.vertex_stride + ubo.per_vertex_color_offset + 2],
-                  1.0);
+                  vb_in[vert1 * ubo.vertex_stride + ubo.per_vertex_color_offset + 3]);
   }
 
   vec2 aspect_adjust = vec2(ubo.aspect_ratio, 1.0);

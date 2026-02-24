@@ -21,6 +21,7 @@ class TI_DLL_EXPORT SceneV2 final : public SceneBase {
   void particles(const ParticlesInfo &info) override;
   void point_light(glm::vec3 pos, glm::vec3 color) override;
   void ambient_light(glm::vec3 color) override;
+  void directional_light(glm::vec3 direction, glm::vec3 color) override;
 
  private:
   Renderer *renderer_;

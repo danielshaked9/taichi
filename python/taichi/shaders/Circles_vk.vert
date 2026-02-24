@@ -15,7 +15,7 @@ layout(binding = 0) uniform UBO {
 }
 ubo;
 
-layout(location = 1) out vec3 selected_color;
+layout(location = 1) out vec4 selected_color;
 layout(location = 2) out vec2 pos_2d;
 
 const vec2 offsets[6] = {
@@ -38,8 +38,8 @@ void main() {
   gl_Position.xy += pos_2d * vec2(radius_1d / ubo.window_width * ubo.window_height, radius_1d) * 2.0;
 
   if (ubo.use_per_vertex_color == 0) {
-    selected_color = ubo.color;
+    selected_color = vec4(ubo.color, 1.0);
   } else {
-    selected_color = in_color.rgb;
+    selected_color = in_color;
   }
 }

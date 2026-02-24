@@ -6,7 +6,7 @@ layout(location = 2) in vec2 in_texcoord;
 layout(location = 3) in vec4 in_color;
 
 layout(location = 0) out vec2 frag_texcoord;
-layout(location = 1) out vec3 selected_color;
+layout(location = 1) out vec4 selected_color;
 
 layout(binding = 0) uniform UniformBufferObject {
   vec3 color;
@@ -22,8 +22,8 @@ void main() {
   frag_texcoord = in_texcoord;
 
   if (ubo.use_per_vertex_color == 0) {
-    selected_color = ubo.color;
+    selected_color = vec4(ubo.color, 1.0);
   } else {
-    selected_color = in_color.rgb;
+    selected_color = in_color;
   }
 }

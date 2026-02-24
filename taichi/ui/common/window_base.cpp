@@ -22,6 +22,7 @@ void WindowBase::set_callbacks() {
   glfwSetKeyCallback(glfw_window_, key_callback);
   glfwSetCursorPosCallback(glfw_window_, mouse_pos_callback);
   glfwSetMouseButtonCallback(glfw_window_, mouse_button_callback);
+  glfwSetScrollCallback(glfw_window_, scroll_callback);
 
   input_handler_.add_key_callback([&](int key, int action) {
     // Catch exception from button_id_to_name().
@@ -47,6 +48,12 @@ void WindowBase::set_callbacks() {
       TI_TRACE("Input: {}.", e.what());
     }
   });
+}
+
+void WindowBase::set_title(const std::string &title) {
+  CHECK_WINDOW_SHOWING;
+  config_.name = title;
+  glfwSetWindowTitle(glfw_window_, title.c_str());
 }
 
 CanvasBase *WindowBase::get_canvas() {
@@ -108,6 +115,11 @@ std::pair<float, float> WindowBase::get_cursor_pos() {
   float y = 1.0 - input_handler_.last_y();
 
   return std::make_pair(x, y);
+}
+
+std::pair<float, float> WindowBase::get_scroll_delta() {
+  CHECK_WINDOW_SHOWING;
+  return input_handler_.get_scroll_delta();
 }
 
 std::vector<Event> WindowBase::get_events(EventType tag) {
@@ -196,6 +208,14 @@ void WindowBase::mouse_button_callback(GLFWwindow *glfw_window,
       reinterpret_cast<WindowBase *>(glfwGetWindowUserPointer(glfw_window));
   window->input_handler_.mouse_button_callback(glfw_window, button, action,
                                                modifier);
+}
+
+void WindowBase::scroll_callback(GLFWwindow *glfw_window,
+                                 double xoffset,
+                                 double yoffset) {
+  auto window =
+      reinterpret_cast<WindowBase *>(glfwGetWindowUserPointer(glfw_window));
+  window->input_handler_.scroll_callback((float)xoffset, (float)yoffset);
 }
 
 }  // namespace taichi::ui
