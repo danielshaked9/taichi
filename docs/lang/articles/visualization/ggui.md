@@ -81,6 +81,31 @@ The positions/centers of geometries are represented as floats between `0.0` and 
 
 The canvas is cleared after every frame. Always call these methods within the render loop.
 
+### RGBA per-vertex color (alpha transparency)
+
+The `per_vertex_color` field can be either a 3-component (RGB) or 4-component (RGBA) vector field. When using 4-component colors, the alpha channel controls transparency, enabling semi-transparent overlapping primitives:
+
+```python
+# Semi-transparent triangles with per-vertex RGBA color
+tri_verts = ti.Vector.field(3, ti.f32, shape=6)
+tri_colors = ti.Vector.field(4, ti.f32, shape=6)  # 4 components: RGBA
+
+# Red triangle, 50% transparent
+tri_verts[0] = [0.2, 0.2, 0]; tri_verts[1] = [0.4, 0.2, 0]; tri_verts[2] = [0.3, 0.5, 0]
+tri_colors[0] = [1, 0, 0, 0.5]; tri_colors[1] = [1, 0, 0, 0.5]; tri_colors[2] = [1, 0, 0, 0.5]
+
+# Circles with alpha ramp
+circle_centers = ti.Vector.field(3, ti.f32, shape=20)
+circle_colors = ti.Vector.field(4, ti.f32, shape=20)  # alpha varies per vertex
+
+canvas.triangles(tri_verts, per_vertex_color=tri_colors)
+canvas.circles(circle_centers, radius=0.015, per_vertex_color=circle_colors)
+```
+
+Alpha blending is applied automatically when per-vertex colors have 4 components. This works for `triangles()`, `circles()`, and `lines()` on both 2D canvas and 3D scene primitives.
+
+![RGBA 2D Canvas](../static/assets/ggui_10_rgba_canvas.png)
+
 ## 3D Scene
 
 ### Create a scene
@@ -111,6 +136,27 @@ scene.point_light(pos=(1, 2, 3), color=(0.5, 0.5, 0.5))
 ```
 
 Note that you need to call `point_light()` for every frame. Similar to the `canvas()` methods, call this method within your render loop.
+
+#### Add a directional light
+
+Call `directional_light()` to add a directional light to the scene. Unlike point lights, directional lights have no position — they represent infinitely distant light sources (like the sun) defined only by their direction and color.
+
+```python cont
+scene.directional_light(direction=(-1, -1, -0.5), color=(0.3, 0.5, 0.9))
+```
+
+The `direction` vector specifies the direction the light is shining (it will be normalized automatically). You can combine multiple point lights and directional lights in the same scene:
+
+```python cont
+scene.ambient_light((0.15, 0.15, 0.15))
+scene.point_light(pos=(2, 2, 1), color=(0.8, 0.6, 0.3))
+scene.directional_light(direction=(-1, -1, -0.5), color=(0.3, 0.5, 0.9))
+scene.directional_light(direction=(0, -0.5, 1), color=(0.4, 0.4, 0.4))
+```
+
+Like `point_light()`, call `directional_light()` every frame within your render loop.
+
+![Directional Light Demo](../static/assets/ggui_11_directional_light.png)
 
 ### 3D Geometries
 
@@ -437,6 +483,196 @@ with gui.sub_window("Sub Window", x=10, y=10, width=300, height=100):
     color = gui.color_edit_3("name2", color)
 ```
 
+### Extended GUI widgets
+
+GGUI provides a comprehensive set of ImGui widgets beyond the basic ones shown above.
+
+#### Selection widgets
+
+```python
+gui = window.get_gui()
+combo_idx = 0
+radio_sel = 0
+listbox_idx = 0
+
+with gui.sub_window("Selection", 0, 0, 0.5, 1.0) as g:
+    # Dropdown combo box
+    combo_idx = g.combo("Combo", combo_idx, ["Apple", "Banana", "Cherry"])
+
+    # Radio buttons (mutually exclusive)
+    for i, label in enumerate(["Option A", "Option B", "Option C"]):
+        if g.radio_button(label, radio_sel == i):
+            radio_sel = i
+        if i < 2:
+            g.same_line()
+
+    # Scrollable listbox
+    listbox_idx = g.listbox("Listbox", listbox_idx, ["Item 0", "Item 1", "Item 2"], 3)
+```
+
+- `combo(name, old_value, items)` — Dropdown to pick one item from a list. Returns the selected index.
+- `radio_button(name, active)` — A radio button. Returns `True` if clicked.
+- `listbox(name, old_value, items, height_in_items=-1)` — A scrollable list. Returns the selected index.
+
+![Selection Widgets](../static/assets/ggui_02_selection_widgets.png)
+
+#### Input widgets
+
+```python
+int_val = 42
+float_val = 3.14
+drag_f = 0.5
+drag_i = 10
+text_val = "Hello"
+multiline_val = "Line 1\nLine 2"
+
+with gui.sub_window("Inputs", 0, 0, 0.5, 1.0) as g:
+    int_val = g.input_int("InputInt", int_val, step=1, step_fast=10)
+    float_val = g.input_float("InputFloat", float_val, step=0.1, step_fast=1.0)
+    drag_f = g.drag_float("DragFloat", drag_f, speed=0.005, v_min=0.0, v_max=1.0)
+    drag_i = g.drag_int("DragInt", drag_i, speed=0.5, v_min=0, v_max=100)
+    text_val = g.input_text("InputText", text_val)
+    multiline_val = g.input_text_multiline("Multiline", multiline_val, width=0, height=60)
+```
+
+- `input_int(name, old_value, step=1, step_fast=100)` — Integer input with +/- buttons. Returns new value.
+- `input_float(name, old_value, step=0.0, step_fast=0.0)` — Float input with +/- buttons. Returns new value.
+- `drag_float(name, old_value, speed=1.0, v_min=0.0, v_max=0.0)` — Click-and-drag float. Returns new value.
+- `drag_int(name, old_value, speed=1.0, v_min=0, v_max=0)` — Click-and-drag integer. Returns new value.
+- `input_text(name, old_value)` — Single-line text input. Returns the string.
+- `input_text_multiline(name, old_value, width=0.0, height=0.0)` — Multi-line text editor. Returns the string.
+
+![Input Widgets](../static/assets/ggui_03_input_widgets.png)
+
+#### Display and layout widgets
+
+```python
+with gui.sub_window("Display", 0, 0, 0.5, 1.0) as g:
+    g.progress_bar(0.6, overlay="60%")
+    g.separator()
+    g.text_wrapped("This text is word-wrapped to fit the window width.")
+    g.same_line()  # Place next widget on same row
+```
+
+- `progress_bar(fraction, size_x=-1.0, size_y=0.0, overlay="")` — Horizontal progress bar.
+- `separator()` — Horizontal divider line.
+- `same_line(offset=0.0, spacing=-1.0)` — Place the next widget on the same row.
+- `text_wrapped(text)` — Word-wrapped text block.
+
+![Display & Layout](../static/assets/ggui_04_display_layout.png)
+
+#### Structural widgets
+
+```python
+with gui.sub_window("Structure", 0, 0, 0.5, 1.0) as g:
+    # Collapsing header
+    if g.collapsing_header("Settings"):
+        check_val = g.checkbox("Enable", check_val)
+        slider_f = g.slider_float("Speed", slider_f, 0.0, 1.0)
+
+    # Tree nodes (context manager auto-calls tree_pop)
+    with g.tree("Node A") as opened:
+        if opened:
+            g.text("Leaf content")
+            with g.tree("Nested") as nested:
+                if nested:
+                    g.text("Deep content")
+
+    # Tooltip on previous widget
+    g.button("Hover me")
+    g.tooltip("Tooltip text appears on hover!")
+```
+
+- `collapsing_header(name)` — Expandable section. Returns `True` if open.
+- `tree(name)` — Context manager for tree nodes. Yields `True` if expanded. Automatically calls `tree_pop()`.
+- `tree_node(name)` / `tree_pop()` — Low-level tree node begin/end.
+- `tooltip(text)` — Shows tooltip when hovering over the previous widget.
+
+![Structural Widgets](../static/assets/ggui_05_structural_widgets.png)
+
+#### Color pickers
+
+```python
+color3 = (0.2, 0.6, 1.0)
+color4 = (1.0, 0.3, 0.1, 0.8)
+
+with gui.sub_window("Colors", 0, 0, 0.5, 1.0) as g:
+    color3 = g.color_edit_3("RGB Color", color3)
+    color4 = g.color_edit_4("RGBA Color", color4)
+```
+
+- `color_edit_3(name, old_value)` — RGB color picker. Returns a 3-tuple.
+- `color_edit_4(name, old_value)` — RGBA color picker with alpha. Returns a 4-tuple.
+
+![Color Pickers](../static/assets/ggui_06_color_pickers.png)
+
+#### Tabs
+
+```python
+with gui.sub_window("Tabs Demo", 0, 0, 0.5, 1.0) as g:
+    with g.tab_bar("MyTabs") as visible:
+        if visible:
+            with g.tab("Tab 1") as selected:
+                if selected:
+                    g.text("Content of Tab 1")
+            with g.tab("Tab 2") as selected:
+                if selected:
+                    g.text("Content of Tab 2")
+```
+
+- `tab_bar(name)` — Context manager for a tab bar. Yields `True` if visible.
+- `tab(name)` — Context manager for a tab item inside a `tab_bar`. Yields `True` if the tab is selected.
+
+![Tabs](../static/assets/ggui_07_tabs.png)
+
+#### Tables
+
+```python
+with gui.sub_window("Table Demo", 0, 0, 0.5, 1.0) as g:
+    with g.table("MyTable", 3) as tbl:
+        if tbl:
+            g.table_setup_column("Name")
+            g.table_setup_column("Type")
+            g.table_setup_column("Value")
+            g.table_headers_row()
+
+            for name, typ, val in [("x", "float", "1.0"), ("y", "int", "42")]:
+                g.table_next_row()
+                g.table_next_column(); g.text(name)
+                g.table_next_column(); g.text(typ)
+                g.table_next_column(); g.text(val)
+```
+
+- `table(name, column, outer_size_x=0.0, outer_size_y=0.0)` — Context manager for a table. Yields `True` if visible.
+- `table_setup_column(label)` — Define a column header.
+- `table_headers_row()` — Render the header row.
+- `table_next_row()` — Advance to the next row.
+- `table_next_column()` — Advance to the next column. Returns `True` if visible.
+
+![Tables](../static/assets/ggui_08_tables.png)
+
+#### Graph and histogram widgets
+
+```python
+import math
+
+with gui.sub_window("Graphs", 0, 0, 0.5, 1.0) as g:
+    # Line graph — plots a series of values as a connected line
+    sin_values = [math.sin(i * 0.3) for i in range(40)]
+    g.graph("Sine Wave", sin_values, scale_min=-1.0, scale_max=1.0,
+            graph_size_x=0, graph_size_y=80)
+
+    # Histogram — plots a series of values as vertical bars
+    hist_values = [abs(math.sin(i * 0.5)) * 10 for i in range(20)]
+    g.graph_histogram("Distribution", hist_values, scale_min=0.0, scale_max=10.0,
+                      graph_size_x=0, graph_size_y=80)
+```
+
+- `graph(title, values, scale_min=None, scale_max=None, graph_size_x=0.0, graph_size_y=0.0, overlay_text="")` — Line graph widget. Plots `values` (a list of floats) as a connected line. Set `scale_min`/`scale_max` to fix the Y-axis range, or pass `None` for auto-scaling.
+- `graph_histogram(title, values, scale_min=None, scale_max=None, graph_size_x=0.0, graph_size_y=0.0, overlay_text="")` — Histogram (bar chart) widget. Same parameters as `graph()` but renders vertical bars instead of a line.
+
+![Graph & Histogram](../static/assets/ggui_09_graph_histogram.png)
+
 ## Show a window
 
 Call `show()` to show a window.
@@ -446,6 +682,16 @@ window.show()
 ```
 
 Call this method _only_ at the end of the render loop for each frame.
+
+## Runtime window title update
+
+You can update the window title at runtime using `set_title()`:
+
+```python cont
+window.set_title("My App — Frame 100")
+```
+
+This is useful for displaying dynamic information such as FPS counters or simulation status in the title bar.
 
 ## User input processing
 
@@ -493,6 +739,26 @@ while window.running:
     if window.is_pressed(ti.ui.RMB):
         attractor_strength[None] = -1
 
+    window.show()
+```
+
+### Mouse wheel scroll events
+
+You can retrieve the mouse wheel scroll delta since the last call using `get_scroll_delta()`:
+
+```python cont
+scroll_x, scroll_y = window.get_scroll_delta()
+```
+
+Returns a tuple `(x, y)` where `y` is the vertical scroll amount (positive = scroll up) and `x` is the horizontal scroll amount. The values are accumulated between calls and reset to zero after each call.
+
+```python cont
+# Example: zoom camera based on mouse wheel
+zoom = 1.0
+while window.running:
+    _, scroll_y = window.get_scroll_delta()
+    zoom *= 1.0 + scroll_y * 0.1
+    # ... use zoom ...
     window.show()
 ```
 
